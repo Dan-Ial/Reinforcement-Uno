@@ -78,7 +78,10 @@ class Game:
         card_to_play_on = self.played[-1]
         for card in (self.players[player]):
             if card.colour == card_to_play_on.colour or card.type == card_to_play_on.type or card.colour == "black":
-                return True
+                if card_to_play_on.type != "draw 4" and card_to_play_on.type != "draw 2":
+                    return True
+                elif card.type == "draw 4" or card.type == "draw 2":
+                    return True
         return False
 
     def play_card(self, player, card_selected_index, colour_selected=None):
@@ -94,24 +97,34 @@ class Game:
         if self.played[-1].type == "skip:":
             self.current_player += 1
 
-        # todo stacking needs to be figured out, huge reward -> this will probably not happen here
-        # if self.played[-1].type == "draw 4":
-        #     self.current_player += 1
-        #     self.draw(self.current_player, 4)
-        #     self.colour_to_play = colour_selected
+        # if player chooses to play a draw 4 or draw 2 card, it gets a little complicated
+        if self.played[-1].type == "draw 4" or self.played[-1].type == "draw 2":
+            draw_total = 4 if self.played[-1].type == "draw 4" else 2
+
+            # determine total number of cards to be drawn
+            for i in range(len(self.played) - 2, -1, -1):
+                if self.played[i] == "draw 4":
+                    draw_total += 4
+                elif self.played[i] == "draw 2":
+                    draw_total += 2
+                else:
+                    break
+
+            if colour_selected is not None:
+                self.colour_to_play = colour_selected
+
+            self.current_player += 1 # check next player
+            if not self.able_to_play(self.current_player):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
+                self.draw(self.current_player, draw_total)
+
+            self.current_player -= 1 # reset player count (it's not their turn yet!)
 
         if self.played[-1].type == "wild":
             """colour to be selected by the player"""
             self.colour_to_play = colour_selected
 
-        # todo need to figure this one out -> need to give huge reward to put draw 2 after another ne
-        # todo probably not gonna happen here
-        # if self.played[-1].type == "draw 2":
-        #     self.draw(self.current_player+, 4)
-        #     self.colour_to_play = colour_selected
-
         if self.played[-1].type == "reverse":
-            self.turn_order = "CW" if self.turn_order is "CCW" else "CCW"
+            self.turn_order = "CW" if self.turn_order == "CCW" else "CCW"
 
         if self.turn_order == "CW":
             if self.current_player == 4:
