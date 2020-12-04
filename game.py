@@ -116,8 +116,8 @@ class Game:
             self.current_player += 1 # check next player
             if not self.able_to_play(self.current_player):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
                 self.draw(self.current_player, draw_total)
-
-            self.current_player -= 1 # reset player count (it's not their turn yet!)
+            else:
+                self.current_player -= 1 # reset player count (it's not their turn yet!)
 
         if self.played[-1].type == "wild":
             """colour to be selected by the player"""
