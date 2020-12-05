@@ -11,6 +11,13 @@ class State:
     def get_action_values(self):
         return self.action_values
 
+    def __str__(self):
+        outstr = "Playable cards: "
+        for card in self.playable:
+            outstr += card + " "
+
+        return outstr
+
     def __eq__(self, other):
         for card in other.playable:
             if card not in self.playable:

@@ -1,4 +1,5 @@
 from card import Card
+from state import State
 from random import shuffle, randint
 
 
