@@ -5,12 +5,15 @@ Authors: Shreyansh Anand, Anne Liu, Bennet Montgomery, Daniel Oh
 """
 
 from game import Game
+from test import Test
 from state import State
 from card import Card
+from collections import Counter
 
+results = []
 
-def game_loop():
-    g = Game()
+def game_loop(training):
+    g = Game(training)
     g.init_cards()
     g.distribute_cards()
 
@@ -34,18 +37,37 @@ def game_loop():
         # print(g.assess_hand())
         g.assess_hand()
         turn += 1
-
     print("round: " + str(turn//4))
     print("winner: " + str(g.current_player))
+    results.append(g.current_player)
+
+
+def testing():
+    for _ in range(100):
+        for _ in range(1000):
+            game_loop(True)
+        print("educating")
+        print("---------------")
+        for _ in range(100):
+            game_loop(False)
+        print("uneducated agents")
+        print("\n")
 
 
 def main():
-    print(State([Card("green", "5"), Card("green", "5")]) == State([Card("green", "5")]))
+    # for _ in range(1000):
+    #     print("Game: " + str(_))
+    #     game_loop(True)
+    #     print("\n")
 
-    for _ in range(1000):
-        print("Game: " + str(_))
-        game_loop()
-        print("\n")
+    testing()
+
+    # print(results)
+    #for stats
+    data = Counter(results)
+    print(data.most_common())  # Returns all unique items and their counts
+    print("winner most often is: "+ str(data.most_common(1)))  # Returns the highest occurring item
+
 
 
 if __name__ == '__main__':

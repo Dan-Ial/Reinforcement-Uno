@@ -5,7 +5,7 @@ import copy
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, training):
         self.players = {1: [], 2: [], 3: [], 4: []}
         self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []),
                               4: (State([]), [-1], [])}
@@ -22,6 +22,9 @@ class Game:
         self.epsilon = 0.25
         self.alpha = 0.1
         self.gamma = 1.0
+
+        # Training
+        self.training = training
 
     def init_cards(self):
         """
@@ -158,9 +161,11 @@ class Game:
             if player_hand == hand:
                 player_hand_visited = True
 
+
         # adding hand to qtable if not visited
-        if not player_hand_visited:
-            self.qtable.append(player_hand)
+        if self.training:
+            if not player_hand_visited:
+                self.qtable.append(player_hand)
 
         # updating state/action value of previous hand using
         # Q(S, A) -> Q(S, A) + alpha[R + gamma*maxa(Q(S', a)) - Q(S, A)], where
@@ -171,7 +176,9 @@ class Game:
         #   alpha ::= step size
         #   R ::= number of cards in the previous hand - number of cards in this hand
         #   gamma ::= 1 (finite game)
-        if self.previous_play[player][1] != [-1]:
+
+        if self.previous_play[player][1] != [-1] and self.training:
+
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
 
@@ -189,14 +196,36 @@ class Game:
                                                         (R + self.gamma * max(player_hand.action_values[-1])
                                                          - self.qtable[s].action_values[-1][a_c])
 
+
         # select card with e-greedy
-        if len(player_hand.action_values) > 1:
-            if random() < self.epsilon:
-                action = randint(0, len(player_hand.action_values) - 2)
+
+        if self.training:
+            if len(player_hand.action_values) > 1:
+                if random() < self.epsilon:
+                    action = randint(0, len(player_hand.action_values) - 2)
+                else:
+                    action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
             else:
-                action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
-        else:
-            action = -1  # draw a card
+                action = -1  # draw a card
+
+        # testing purposes
+        if not self.training:
+            # first player plays optimally
+            if player == 1:
+                if len(player_hand.action_values) > 1:
+                    if random() < self.epsilon:
+                        action = randint(0, len(player_hand.action_values) - 2)
+                    else:
+                        action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
+                else:
+                    action = -1  # draw a card
+
+            # others players will always use random action
+            else:
+                if len(player_hand.action_values) > 1:
+                    action = randint(0, len(player_hand.action_values) - 2)
+                else:
+                    action = -1  # draw a card
 
         # play selected card:
         if action == -1:  # draw a card
