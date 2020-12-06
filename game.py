@@ -7,7 +7,8 @@ import copy
 class Game:
     def __init__(self):
         self.players = {1: [], 2: [], 3: [], 4: []}
-        self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []), 4: (State([]), [-1], [])}
+        self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []),
+                              4: (State([]), [-1], [])}
         self.turn = 0
         self.turn_order = "CW"
         self.draw_from = []
@@ -16,7 +17,7 @@ class Game:
         self.colour_to_play = ""
         self.must_play_draw = False
 
-        #RL parameters
+        # RL parameters
         self.qtable = []
         self.epsilon = 0.25
         self.alpha = 0.1
@@ -51,7 +52,9 @@ class Game:
             for _ in range(7):
                 self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
-
+                # Shrey's code to stop the draw 4 first problem
+        while self.draw_from[0].type == "draw 4":
+            shuffle(self.draw_from)
         self.played.append(self.draw_from[0])
         del self.draw_from[0]
         self.colour_to_play = self.played[-1].colour
@@ -71,17 +74,23 @@ class Game:
         if number_to_draw == 0:
             while not self.able_to_play(player):
                 if len(self.draw_from) == 0:
+                    # Shrey's code, there was a bug where after all cards are drawn, there technicaly was no
+                    # cards in the played list, so added that.
+                    last_played = self.played[-1]
+                    del self.played[-1]
                     shuffle(self.played)
                     self.draw_from = self.played.copy()
-                    self.played = []
+                    self.played = [last_played]
                 self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
         else:
             for _ in range(number_to_draw):
                 if len(self.draw_from) == 0:
+                    last_played = self.played[-1]
+                    del self.played[-1]
                     shuffle(self.played)
                     self.draw_from = self.played.copy()
-                    self.played = []
+                    self.played = [last_played]
                 self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
         return True
@@ -125,6 +134,20 @@ class Game:
         if player is None:
             player = self.current_player
 
+        # todo this is wrong, dont know why it causes it to crash however
+        # colour = ""
+        # if self.colour_to_play == "black" and len(self.played) == 1:
+        #     if random() < self.epsilon:
+        #         colour = randint(0, 3)
+        #     else:
+        #         poss_colours = {"red": 0, "green": 0, "blue": 0, "yellow": 0}
+        #         hand = self.players[player]
+        #         for card in hand:
+        #             if card.colour in poss_colours.keys():
+        #                 poss_colours[card.colour] += 1
+        #         colour = max(poss_colours, key=poss_colours.get)
+        # self.colour_to_play = colour
+
         # searching for hand in qtable
         player_hand = State(self.get_playable_cards(player))
         player_hand_visited = False
@@ -149,19 +172,19 @@ class Game:
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
 
-            R = len(self.previous_play[player][2]) - len(self.players[player])\
-
-            # updating card selection value
+            R = len(self.previous_play[player][2]) - len(self.players[player]) \
+ \
+                    # updating card selection value
             if len(player_hand.action_values[:-1]) > 0:
-                self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (R + self.gamma*max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
+                self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (
+                        R + self.gamma * max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
 
             # updating colour choice value if a colour choice was made
             if len(self.previous_play[player][1]) > 1:
                 a_c = self.previous_play[player][1][1]
                 self.qtable[s].action_values[-1][a_c] = self.qtable[s].action_values[-1][a_c] + self.alpha * \
-                                                  (R + self.gamma * max(player_hand.action_values[-1])
-                                                   - self.qtable[s].action_values[-1][a_c])
-
+                                                        (R + self.gamma * max(player_hand.action_values[-1])
+                                                         - self.qtable[s].action_values[-1][a_c])
 
         # select card with e-greedy
         if len(player_hand.action_values) > 1:
@@ -173,7 +196,7 @@ class Game:
             action = -1  # draw a card
 
         # play selected card:
-        if action == -1: # draw a card
+        if action == -1:  # draw a card
             self.draw(player, 1)
 
             if self.turn_order == "CW":
@@ -208,7 +231,7 @@ class Game:
                 self.play_card(player, player_hand.playable[action], "yellow")
 
             return "picked " + player_hand.playable[action].type + " and changed the colour to " + self.colour_to_play
-        else: # a non-black card was played
+        else:  # a non-black card was played
             self.previous_play[player] = (player_hand, [action], self.players[player].copy())
             self.play_card(player, player_hand.playable[action])
             return "picked " + player_hand.playable[action].type + " " + player_hand.playable[action].colour
@@ -242,7 +265,7 @@ class Game:
             if colour_selected is not None:
                 self.colour_to_play = colour_selected
 
-            if self.turn_order == "CW": # check next player
+            if self.turn_order == "CW":  # check next player
                 if self.current_player == 4:
                     self.current_player = 1
                 else:
@@ -253,7 +276,8 @@ class Game:
                 else:
                     self.current_player -= 1
 
-            if not self.able_to_play(self.current_player, False):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
+            if not self.able_to_play(self.current_player,
+                                     False):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
                 self.draw(self.current_player, draw_total)
             else:
                 self.must_play_draw = True

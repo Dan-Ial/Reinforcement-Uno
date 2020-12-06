@@ -9,22 +9,22 @@ from state import State
 from card import Card
 
 
-def main():
+def game_loop():
     g = Game()
     g.init_cards()
     g.distribute_cards()
 
     # sanity check
-    print("Initial card: ")
-    print(g.played[0].type)
-    print(g.played[0].colour)
-    print("Player hands: ")
-    for i in range(1, 5):
-        print(str(State(g.players[i])))
+    # print("Initial card: ")
+    # print(g.played[0].type)
+    # print(g.played[0].colour)
+    # print("Player hands: ")
+    # for i in range(1, 5):
+    #     print(str(State(g.players[i])))
 
-    print("Player playable cards: ")
-    for i in range(1, 5):
-        print(str(State(g.get_playable_cards(i))))
+    # print("Player playable cards: ")
+    # for i in range(1, 5):
+    #     print(str(State(g.get_playable_cards(i))))
 
     # Shrey's code -> termination statement, keep going till at least one player has 0 cards
     turn = 0
@@ -34,11 +34,16 @@ def main():
         # print(g.assess_hand())
         g.assess_hand()
         turn += 1
-        print(turn)
 
     print("round: " + str(turn//4))
     print("winner: " + str(g.current_player))
 
+
+def main():
+    for _ in range(100):
+        print("Game: " + str(_))
+        game_loop()
+        print("\n")
 
 
 if __name__ == '__main__':
