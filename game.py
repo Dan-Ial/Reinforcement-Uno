@@ -149,7 +149,7 @@ class Game:
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
 
-            R = len(self.previous_play[player][2]) - len(self.players[player])
+            R = len(self.previous_play[player][2]) - len(self.players[player])\
 
             # updating card selection value
             if len(player_hand.action_values[:-1]) > 0:
@@ -196,7 +196,7 @@ class Game:
                 colour = player_hand.action_values[-1].index(max(player_hand.action_values[-1]))
 
             # setting hand to previous hand for this player
-            self.previous_play[player] = (player_hand, [action, colour], self.players[player])
+            self.previous_play[player] = (player_hand, [action, colour], self.players[player].copy())
 
             if colour == 0:
                 self.play_card(player, player_hand.playable[action], "red")
@@ -209,7 +209,7 @@ class Game:
 
             return "picked " + player_hand.playable[action].type + " and changed the colour to " + self.colour_to_play
         else: # a non-black card was played
-            self.previous_play[player] = (player_hand, [action], self.players[player],)
+            self.previous_play[player] = (player_hand, [action], self.players[player].copy())
             self.play_card(player, player_hand.playable[action])
             return "picked " + player_hand.playable[action].type + " " + player_hand.playable[action].colour
 
