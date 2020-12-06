@@ -26,7 +26,11 @@ def main():
     for i in range(1, 5):
         print(str(State(g.get_playable_cards(i))))
 
-    print(g.assess_hand())
+    for i in range(0, 20):
+        print(str(State(g.get_playable_cards(g.current_player))))
+        print(g.assess_hand())
+
+    print
 
 
 

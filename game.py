@@ -7,7 +7,7 @@ import copy
 class Game:
     def __init__(self):
         self.players = {1: [], 2: [], 3: [], 4: []}
-        self.previous_hand = {1: None, 2: None, 3: None, 4: None}
+        self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []), 4: (State([]), [-1], [])}
         self.turn = 0
         self.turn_order = "CW"
         self.draw_from = []
@@ -19,6 +19,7 @@ class Game:
         self.qtable = []
         self.epsilon = 0.25
         self.alpha = 0.1
+        self.gamma = 1.0
 
     def init_cards(self):
         """
@@ -128,14 +129,37 @@ class Game:
         for hand in self.qtable:
             if player_hand == hand:
                 player_hand_visited = True
-                player_hand = hand
 
         # adding hand to qtable if not visited
         if not player_hand_visited:
             self.qtable.append(player_hand)
 
-        # setting hand to previous hand for this player
-        self.previous_hand[player] = player_hand
+        # updating state/action value of previous hand using
+        # Q(S, A) -> Q(S, A) + alpha[R + gamma*maxa(Q(S', a)) - Q(S, A)], where
+        #   S ::= previous hand
+        #   S' ::= this hand
+        #   a ::= most valued action in this hand
+        #   A ::= action played
+        #   alpha ::= step size
+        #   R ::= number of cards in the previous hand - number of cards in this hand
+        #   gamma ::= 1 (finite game)
+        if self.previous_play[player][1] != [-1]:
+            s = self.qtable.index(self.previous_play[player][0])
+            a = self.previous_play[player][1][0]
+
+            R = len(self.previous_play[player][2]) - len(self.players[player])
+
+            # updating card selection value
+            if len(player_hand.action_values[:-1]) > 0:
+                self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (R + self.gamma*max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
+
+            # updating colour choice value if a colour choice was made
+            if len(self.previous_play[player][1]) > 1:
+                a_c = self.previous_play[player][1][1]
+                self.qtable[s].action_values[-1][a_c] = self.qtable[s].action_values[-1][a_c] + self.alpha * \
+                                                  (R + self.gamma * max(player_hand.action_values[-1])
+                                                   - self.qtable[s].action_values[-1][a_c])
+
 
         # select card with e-greedy
         if len(player_hand.action_values) > 1:
@@ -143,7 +167,6 @@ class Game:
                 action = randint(0, len(player_hand.action_values) - 2)
             else:
                 action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
-
         else:
             action = -1  # draw a card
 
@@ -170,6 +193,9 @@ class Game:
             else:
                 colour = player_hand.action_values[-1].index(max(player_hand.action_values[-1]))
 
+            # setting hand to previous hand for this player
+            self.previous_play[player] = (player_hand, [action, colour], self.players[player])
+
             if colour == 0:
                 self.play_card(player, player_hand.playable[action], "red")
             elif colour == 1:
@@ -181,6 +207,7 @@ class Game:
 
             return "picked " + player_hand.playable[action].type + " and changed the colour to " + self.colour_to_play
         else: # a non-black card was played
+            self.previous_play[player] = (player_hand, [action], self.players[player],)
             self.play_card(player, player_hand.playable[action])
             return "picked " + player_hand.playable[action].type + " " + player_hand.playable[action].colour
 
@@ -213,11 +240,30 @@ class Game:
             if colour_selected is not None:
                 self.colour_to_play = colour_selected
 
-            self.current_player += 1 # check next player
+            if self.turn_order == "CW": # check next player
+                if self.current_player == 4:
+                    self.current_player = 1
+                else:
+                    self.current_player += 1
+            else:
+                if self.current_player == 1:
+                    self.current_player = 4
+                else:
+                    self.current_player -= 1
+
             if not self.able_to_play(self.current_player):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
                 self.draw(self.current_player, draw_total)
             else:
-                self.current_player -= 1 # reset player count (it's not their turn yet!)
+                if self.turn_order == "CW":
+                    if self.current_player == 1:
+                        self.current_player = 4
+                    else:
+                        self.current_player -= 1
+                else:
+                    if self.current_player == 4:
+                        self.current_player = 1
+                    else:
+                        self.current_player += 1
 
         if self.played[-1].type == "wild":
             """colour to be selected by the player"""

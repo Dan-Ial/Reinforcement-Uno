@@ -1,6 +1,6 @@
 class State:
     def __init__(self, playable):
-        self.playable = playable
+        self.playable = playable.copy()
         self.action_values = []
         for card in self.playable:
             self.action_values.append(1)
