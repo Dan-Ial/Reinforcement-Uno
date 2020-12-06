@@ -106,7 +106,9 @@ class Game:
             if card.colour == self.colour_to_play or card.type == card_to_play_on.type or card.colour == "black":
                 if myturn:
                     return True
-                elif card.type == "draw 2" or card.type == "draw 4":
+                elif card.type == "draw 2" and card_to_play_on.type == "draw 2":
+                    return True
+                elif card.type == "draw 4" and card_to_play_on.type == "draw 4":
                     return True
 
         return False
@@ -120,9 +122,10 @@ class Game:
         card_to_play_on = self.played[-1]
         for card in (self.players[player]):
             if card.colour == self.colour_to_play or card.type == card_to_play_on.type or card.colour == "black":
-                if self.must_play_draw and (card_to_play_on.type == "draw 4" or card_to_play_on.type == "draw 2"):
-                    if card.type == "draw 4" or card.type == "draw 2":
-                        playable_cards.append(card)
+                if self.must_play_draw and card_to_play_on.type == "draw 4" and card.type == "draw 4":
+                    playable_cards.append(card)
+                elif self.must_play_draw and card_to_play_on.type == "draw 2" and card.type == "draw 2":
+                    playable_cards.append(card)
                 else:
                     playable_cards.append(card)
 
@@ -136,7 +139,7 @@ class Game:
 
         # todo this is wrong, dont know why it causes it to crash however
         colour = ""
-        if self.colour_to_play == "black" and len(self.played) == 1:
+        if self.colour_to_play == "black" and self.previous_play[1] == [-1]:
             if random() < self.epsilon:
                 colour = randint(0, 3)
             else:
@@ -146,7 +149,7 @@ class Game:
                     if card.colour in poss_colours.keys():
                         poss_colours[card.colour] += 1
                 colour = max(poss_colours, key=poss_colours.get)
-        self.colour_to_play = colour
+            self.colour_to_play = colour
 
         # searching for hand in qtable
         player_hand = State(self.get_playable_cards(player))
@@ -177,7 +180,7 @@ class Game:
             # updating card selection value
             if len(player_hand.action_values[:-1]) > 0:
                 self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (
-                        R + self.gamma * max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
+                            R + self.gamma * max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
 
             # updating colour choice value if a colour choice was made
             if len(self.previous_play[player][1]) > 1:
