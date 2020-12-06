@@ -142,11 +142,8 @@ class Game:
             if random() < self.epsilon:
                 action = randint(0, len(player_hand.action_values) - 2)
             else:
-                try:
-                    action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
-                except:
-                    print(player_hand.action_values)
-                    return "failure"
+                action = player_hand.action_values[:-1].index(max(player_hand.action_values[:-1]))
+
         else:
             action = -1  # draw a card
 
