@@ -15,6 +15,9 @@ class State:
         return outstr
 
     def __eq__(self, other):
+        if len(self.playable) != len(other.playable):
+            return False
+
         for card1 in other.playable:
             card_present = False
             for card2 in self.playable:

@@ -28,7 +28,7 @@ def game_loop():
 
     # Shrey's code -> termination statement, keep going till at least one player has 0 cards
     turn = 0
-    while len(g.players[g.current_player]) is not 0:
+    while len(g.players[g.current_player]) != 0:
         # print(g.current_player)
         # print(str(State(g.get_playable_cards(g.current_player))))
         # print(g.assess_hand())
@@ -40,7 +40,9 @@ def game_loop():
 
 
 def main():
-    for _ in range(100):
+    print(State([Card("green", "5"), Card("green", "5")]) == State([Card("green", "5")]))
+
+    for _ in range(1000):
         print("Game: " + str(_))
         game_loop()
         print("\n")

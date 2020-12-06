@@ -138,18 +138,19 @@ class Game:
             player = self.current_player
 
         # todo this is wrong, dont know why it causes it to crash however
-        # colour = ""
-        # if self.colour_to_play == "black" and len(self.played) == 1:
-        #     if random() < self.epsilon:
-        #         colour = randint(0, 3)
-        #     else:
-        #         poss_colours = {"red": 0, "green": 0, "blue": 0, "yellow": 0}
-        #         hand = self.players[player]
-        #         for card in hand:
-        #             if card.colour in poss_colours.keys():
-        #                 poss_colours[card.colour] += 1
-        #         colour = max(poss_colours, key=poss_colours.get)
-        # self.colour_to_play = colour
+        colour = ""
+        if self.colour_to_play == "black" and self.previous_play[1] == [-1]:
+            if random() < self.epsilon:
+                colour = randint(0, 3)
+            else:
+                poss_colours = {"red": 0, "green": 0, "blue": 0, "yellow": 0}
+                hand = self.players[player]
+                for card in hand:
+                    if card.colour in poss_colours.keys():
+                        poss_colours[card.colour] += 1
+                colour = max(poss_colours, key=poss_colours.get)
+
+            self.colour_to_play = colour
 
         # searching for hand in qtable
         player_hand = State(self.get_playable_cards(player))
@@ -175,12 +176,11 @@ class Game:
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
 
-            R = len(self.previous_play[player][2]) - len(self.players[player]) \
- \
-                    # updating card selection value
+            R = len(self.previous_play[player][2]) - len(self.players[player])
+
+            # updating card selection value
             if len(player_hand.action_values[:-1]) > 0:
-                self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (
-                        R + self.gamma * max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
+                self.qtable[s].action_values[a] = self.qtable[s].action_values[a] + self.alpha * (R + self.gamma * max(player_hand.action_values[:-1]) - self.qtable[s].action_values[a])
 
             # updating colour choice value if a colour choice was made
             if len(self.previous_play[player][1]) > 1:
