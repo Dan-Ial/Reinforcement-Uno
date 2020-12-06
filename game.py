@@ -106,7 +106,9 @@ class Game:
             if card.colour == self.colour_to_play or card.type == card_to_play_on.type or card.colour == "black":
                 if myturn:
                     return True
-                elif card.type == "draw 2" or card.type == "draw 4":
+                elif card.type == "draw 2" and card_to_play_on.type == "draw 2":
+                    return True
+                elif card.type == "draw 4" and card_to_play_on.type == "draw 4":
                     return True
 
         return False
@@ -120,9 +122,10 @@ class Game:
         card_to_play_on = self.played[-1]
         for card in (self.players[player]):
             if card.colour == self.colour_to_play or card.type == card_to_play_on.type or card.colour == "black":
-                if self.must_play_draw and (card_to_play_on.type == "draw 4" or card_to_play_on.type == "draw 2"):
-                    if card.type == "draw 4" or card.type == "draw 2":
-                        playable_cards.append(card)
+                if self.must_play_draw and card_to_play_on.type == "draw 4" and card.type == "draw 4":
+                    playable_cards.append(card)
+                elif self.must_play_draw and card_to_play_on.type == "draw 2" and card.type == "draw 2":
+                    playable_cards.append(card)
                 else:
                     playable_cards.append(card)
 
