@@ -26,10 +26,19 @@ def main():
     for i in range(1, 5):
         print(str(State(g.get_playable_cards(i))))
 
-    for i in range(0, 20):
-        print(g.current_player)
-        print(str(State(g.get_playable_cards(g.current_player))))
-        print(g.assess_hand())
+    # Shrey's code -> termination statement, keep going till at least one player has 0 cards
+    turn = 0
+    while len(g.players[g.current_player]) is not 0:
+        # print(g.current_player)
+        # print(str(State(g.get_playable_cards(g.current_player))))
+        # print(g.assess_hand())
+        g.assess_hand()
+        turn += 1
+        print(turn)
+
+    print("round: " + str(turn//4))
+    print("winner: " + str(g.current_player))
+
 
 
 if __name__ == '__main__':
