@@ -14,6 +14,7 @@ class Game:
         self.played = []
         self.current_player = randint(1, 5)
         self.colour_to_play = ""
+        self.must_play_draw = False
 
         #RL parameters
         self.qtable = []
@@ -109,13 +110,14 @@ class Game:
 
         card_to_play_on = self.played[-1]
         for card in (self.players[player]):
-            if card.colour == card_to_play_on.colour or card.type == card_to_play_on.type or card.colour == "black":
-                if card_to_play_on.type == "draw 4" or card_to_play_on.type == "draw 2":
+            if card.colour == self.colour_to_play or card.type == card_to_play_on.type or card.colour == "black":
+                if self.must_play_draw and (card_to_play_on.type == "draw 4" or card_to_play_on.type == "draw 2"):
                     if card.type == "draw 4" or card.type == "draw 2":
                         playable_cards.append(card)
                 else:
                     playable_cards.append(card)
 
+        self.must_play_draw = False
         return playable_cards
 
     # method for assessing the hand of the current player and choosing a card to play
@@ -251,9 +253,11 @@ class Game:
                 else:
                     self.current_player -= 1
 
-            if not self.able_to_play(self.current_player):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
+            if not self.able_to_play(self.current_player, False):  # i.e. next player doesn't have a draw 2 or draw 4 to pass
                 self.draw(self.current_player, draw_total)
             else:
+                self.must_play_draw = True
+
                 if self.turn_order == "CW":
                     if self.current_player == 1:
                         self.current_player = 4

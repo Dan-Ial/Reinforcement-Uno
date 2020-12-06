@@ -27,11 +27,9 @@ def main():
         print(str(State(g.get_playable_cards(i))))
 
     for i in range(0, 20):
+        print(g.current_player)
         print(str(State(g.get_playable_cards(g.current_player))))
         print(g.assess_hand())
-
-    print
-
 
 
 if __name__ == '__main__':
