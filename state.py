@@ -5,26 +5,32 @@ class State:
         for card in self.playable:
             self.action_values.append(1)
 
-    def update_action_values(self, new_val):
-        self.action_values = new_val
-
-    def get_action_values(self):
-        return self.action_values
+        self.action_values.append([1, 1, 1, 1]) # value of choosing r, g, b, y if a black card is played
 
     def __str__(self):
         outstr = "Playable cards: "
         for card in self.playable:
-            outstr += card + " "
+            outstr += card.type + " " + card.colour + " "
 
         return outstr
 
     def __eq__(self, other):
-        for card in other.playable:
-            if card not in self.playable:
+        for card1 in other.playable:
+            card_present = False
+            for card2 in self.playable:
+                if card1 == card2:
+                    card_present = True
+
+            if not card_present:
                 return False
 
-        for card in self.playable:
-            if card not in other.playable:
+        for card1 in self.playable:
+            card_present = False
+            for card2 in other.playable:
+                if card1 == card2:
+                    card_present = True
+
+            if not card_present:
                 return False
 
         return True
