@@ -72,7 +72,7 @@ class Game:
                     shuffle(self.played)
                     self.draw_from = self.played.copy()
                     self.played = []
-                self.players[player] += self.draw_from[0]
+                self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
         else:
             for _ in range(number_to_draw):
@@ -80,7 +80,7 @@ class Game:
                     shuffle(self.played)
                     self.draw_from = self.played.copy()
                     self.played = []
-                self.players[player] += self.draw_from[0]
+                self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
         return True
 
@@ -138,17 +138,29 @@ class Game:
         self.previous_hand[player] = player_hand
 
         # select card with e-greedy
-        if random() < self.epsilon:
-            if len(player_hand.action_values) > 1:
+        if len(player_hand.action_values) > 1:
+            if random() < self.epsilon:
                 action = randint(0, len(player_hand.action_values) - 2)
             else:
-                action = -1 # draw a card
+                action = player_hand.action_values[:-2].index(max(player_hand.action_values[:-2]))
         else:
-            action = player_hand.action_values[:-2].index(max(player_hand.action_values[:-2]))
+            action = -1  # draw a card
 
         # play selected card:
         if action == -1: # draw a card
             self.draw(player, 1)
+
+            if self.turn_order == "CW":
+                if self.current_player == 4:
+                    self.current_player = 1
+                else:
+                    self.current_player += 1
+            else:
+                if self.current_player == 1:
+                    self.current_player = 4
+                else:
+                    self.current_player -= 1
+
             return "drew a card"
         if player_hand.playable[action].colour == "black":
             # decide what colour to switch to using e-greedy
@@ -190,9 +202,9 @@ class Game:
 
             # determine total number of cards to be drawn
             for i in range(len(self.played) - 2, -1, -1):
-                if self.played[i] == "draw 4":
+                if self.played[i].type == "draw 4":
                     draw_total += 4
-                elif self.played[i] == "draw 2":
+                elif self.played[i].type == "draw 2":
                     draw_total += 2
                 else:
                     break
