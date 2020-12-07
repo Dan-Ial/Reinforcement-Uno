@@ -281,7 +281,7 @@ class Game:
                     self.current_player -= 1
 
             # applying q table update
-            if not self.training and s is not None and not first_turn:
+            if self.training and s is not None and not first_turn:
                 if c_a is not None:
                     self.update_q_table(s, player_hand, self.draw_reward, a, c_a)
                 else:
@@ -298,7 +298,7 @@ class Game:
                 colour = player_hand.action_values[-1].index(max(player_hand.action_values[-1]))
 
             # applying q table update
-            if not self.training and s is not None and not first_turn:
+            if self.training and s is not None and not first_turn:
                 if c_a is not None:
                     self.update_q_table(s, player_hand, self.play_reward, a, c_a)
                 else:
@@ -320,7 +320,7 @@ class Game:
         else:  # a non-black card was played
             # applying q-table update
             # applying q table update
-            if not self.training and s is not None and not first_turn:
+            if self.training and s is not None and not first_turn:
                 if c_a is not None:
                     self.update_q_table(self.previous_play[player][0], player_hand, self.play_reward, a, c_a)
                 else:
@@ -398,7 +398,7 @@ class Game:
         if self.played[-1].colour != "black":
             self.colour_to_play = self.played[-1].colour
 
-        if len(self.players[player]) == 0:
+        if len(self.players[player]) == 0 and self.training:
             if len(self.previous_play[player][1]) > 1:
                 self.update_q_table(self.previous_play[player][0], State([]), self.win_reward, self.previous_play[player][1][0], self.previous_play[player][1][1], True)
             else:
