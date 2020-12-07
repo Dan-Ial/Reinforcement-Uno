@@ -26,6 +26,19 @@ class Game:
         # Training
         self.training = training
 
+    def restart_game(self):
+        self.players = {1: [], 2: [], 3: [], 4: []}
+        self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []),
+                              4: (State([]), [-1], [])}
+        self.turn = 0
+        self.turn_order = "CW"
+        self.draw_from = []
+        self.played = []
+        self.current_player = randint(1, 5)
+        self.colour_to_play = ""
+        self.must_play_draw = False
+
+
     def init_cards(self):
         """
         The deck consists of 108 cards: four each of "Wild" and "Wild Draw Four," and 25 each of four different colors
@@ -209,7 +222,7 @@ class Game:
                 action = -1  # draw a card
 
         # testing purposes
-        if not self.training:
+       if not self.training:
             # first player plays optimally
             if player == 1:
                 if len(player_hand.action_values) > 1:
