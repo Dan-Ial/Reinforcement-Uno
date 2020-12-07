@@ -5,17 +5,17 @@ Authors: Shreyansh Anand, Anne Liu, Bennet Montgomery, Daniel Oh
 """
 
 from game import Game
-from test import Test
+# from test import Test
 from state import State
 from card import Card
 from collections import Counter
 
-results = []
+results_from_training = []
+results_from_testing = []
 
-def game_loop(training):
-    g = Game(training)
-    g.init_cards()
-    g.distribute_cards()
+
+def game_loop(g):
+
 
     # sanity check
     # print("Initial card: ")
@@ -37,20 +37,36 @@ def game_loop(training):
         # print(g.assess_hand())
         g.assess_hand()
         turn += 1
-    print("round: " + str(turn//4))
-    print("winner: " + str(g.current_player))
-    results.append(g.current_player)
+    # print("round: " + str(turn//4))
+    # print("winner: " + str(g.current_player))
+        # results_from_training.append((g.current_player, turn//4))
+        # results_from_testing.append((g.current_player, turn//4))
+    return g.current_player, turn // 4
 
 
 def testing():
+    g = Game(True)
     for _ in range(100):
-        for _ in range(1000):
-            game_loop(True)
+        count_times_1_wins = 0
+        print("Epoch: " + str(_))
         print("educating")
+        for i in range(50):
+            g.training = True
+            g.restart_game()
+            g.init_cards()
+            g.distribute_cards()
+            game_loop(g)
         print("---------------")
-        for _ in range(100):
-            game_loop(False)
-        print("uneducated agents")
+        print("3 other uneducated agents")
+        for i in range(50):
+            g.training = False
+            g.restart_game()
+            g.init_cards()
+            g.distribute_cards()
+            current_player, turn = game_loop(g)
+            if current_player == 1:
+                count_times_1_wins += 1
+        print(count_times_1_wins/50)
         print("\n")
 
 
@@ -63,11 +79,10 @@ def main():
     testing()
 
     # print(results)
-    #for stats
-    data = Counter(results)
-    print(data.most_common())  # Returns all unique items and their counts
-    print("winner most often is: "+ str(data.most_common(1)))  # Returns the highest occurring item
-
+    # for stats
+    # data = Counter(results)
+    # print(data.most_common())  # Returns all unique items and their counts
+    # print("winner most often is: " + str(data.most_common(1)))  # Returns the highest occurring item
 
 
 if __name__ == '__main__':

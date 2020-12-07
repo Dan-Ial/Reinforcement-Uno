@@ -222,7 +222,7 @@ class Game:
                 action = -1  # draw a card
 
         # testing purposes
-       if not self.training:
+        elif not self.training:
             # first player plays optimally
             if player == 1:
                 if len(player_hand.action_values) > 1:
