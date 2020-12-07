@@ -25,7 +25,7 @@ class Game:
 
         # Training
         self.training = training
-        self.draw_reward = -1
+        self.draw_reward = -5
         self.play_reward = 0
         self.win_reward = 10
 
@@ -267,7 +267,7 @@ class Game:
 
         # play selected card:
         if action == -1:  # draw a card
-            self.draw(player, 1)  # todo investigate if we make this unlimited till you can play
+            self.draw(player)  # todo investigate if we make this unlimited till you can play
 
             if self.turn_order == "CW":
                 if self.current_player == 4:
