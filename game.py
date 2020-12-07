@@ -7,8 +7,8 @@ import copy
 class Game:
     def __init__(self, training):
         self.players = {1: [], 2: [], 3: [], 4: []}
-        self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []),
-                              4: (State([]), [-1], [])}
+        self.previous_play = {1: (State([]), [-2], []), 2: (State([]), [-2], []), 3: (State([]), [-2], []),
+                              4: (State([]), [-2], [])}
         self.turn = 0
         self.turn_order = "CW"
         self.draw_from = []
@@ -25,6 +25,9 @@ class Game:
 
         # Training
         self.training = training
+        self.draw_reward = -1
+        self.play_reward = 0
+        self.win_reward = 10
 
     def restart_game(self):
         self.players = {1: [], 2: [], 3: [], 4: []}
@@ -148,12 +151,27 @@ class Game:
         self.must_play_draw = False
         return playable_cards
 
+    def update_q_table(self, state, state_prime, reward, action, colour_index=None, terminal=False):
+        s = self.qtable.index(state)
+
+        if state_prime in self.qtable and not terminal:
+            state_prime = self.qtable[self.qtable.index(state_prime)]
+
+        if len(state_prime.action_values) > 1:
+            self.qtable[s].action_values[action] += self.alpha * (reward + self.gamma * max(state_prime.action_values[:-1]) - self.qtable[s].action_values[action])
+
+        if colour_index is not None:
+            if len(state_prime.action_values) > 1:
+                self.qtable[s].action_values[-1][colour_index] += self.alpha * (reward + self.gamma * max(state_prime.action_values[:-1]) - self.qtable[s].action_values[-1][colour_index])
+
+        if terminal:
+            self.qtable[s].action_values[action] += self.alpha * (reward - self.qtable[s].action_values[action])
+
     # method for assessing the hand of the current player and choosing a card to play
     def assess_hand(self, player=None):
         if player is None:
             player = self.current_player
 
-        # todo this is wrong, dont know why it causes it to crash however
         colour = ""
         if self.colour_to_play == "black" and self.previous_play[1] == [-1]:
             if random() < self.epsilon:
@@ -189,12 +207,19 @@ class Game:
         #   alpha ::= step size
         #   R ::= number of cards in the previous hand - number of cards in this hand
         #   gamma ::= 1 (finite game)
+        first_turn = False
+        s = None
+        a = None
+        c_a = None
 
-        if self.previous_play[player][1] != [-1] and self.training:
-
+        if self.previous_play[player][1][0] >= 0 and self.training:
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
-
+            if len(self.previous_play[player][1]) > 1:
+                c_a = self.previous_play[1][1]
+        elif self.previous_play[player][1] == [-2] and  self.training: # first hand of the game
+            first_turn = True
+            """
             R = len(self.previous_play[player][2]) - len(self.players[player])
 
             # updating card selection value
@@ -208,7 +233,7 @@ class Game:
                 self.qtable[s].action_values[-1][a_c] = self.qtable[s].action_values[-1][a_c] + self.alpha * \
                                                         (R + self.gamma * max(player_hand.action_values[-1])
                                                          - self.qtable[s].action_values[-1][a_c])
-
+            """
 
         # select card with e-greedy
 
@@ -255,6 +280,15 @@ class Game:
                 else:
                     self.current_player -= 1
 
+            # applying q table update
+            if not self.training and s is not None and not first_turn:
+                if c_a is not None:
+                    self.update_q_table(s, player_hand, self.draw_reward, a, c_a)
+                else:
+                    self.update_q_table(s, player_hand, self.draw_reward, a)
+
+            self.previous_play[player] = (player_hand, [-1], self.players[player].copy())
+
             return "drew a card"
         if player_hand.playable[action].colour == "black":
             # decide what colour to switch to using e-greedy
@@ -262,6 +296,13 @@ class Game:
                 colour = randint(0, 3)
             else:
                 colour = player_hand.action_values[-1].index(max(player_hand.action_values[-1]))
+
+            # applying q table update
+            if not self.training and s is not None and not first_turn:
+                if c_a is not None:
+                    self.update_q_table(s, player_hand, self.play_reward, a, c_a)
+                else:
+                    self.update_q_table(s, player_hand, self.play_reward, a)
 
             # setting hand to previous hand for this player
             self.previous_play[player] = (player_hand, [action, colour], self.players[player].copy())
@@ -277,6 +318,14 @@ class Game:
 
             return "played " + player_hand.playable[action].type + " and changed the colour to " + self.colour_to_play
         else:  # a non-black card was played
+            # applying q-table update
+            # applying q table update
+            if not self.training and s is not None and not first_turn:
+                if c_a is not None:
+                    self.update_q_table(self.previous_play[player][0], player_hand, self.play_reward, a, c_a)
+                else:
+                    self.update_q_table(self.previous_play[player][0], player_hand, self.play_reward, a)
+
             self.previous_play[player] = (player_hand, [action], self.players[player].copy())
             self.play_card(player, player_hand.playable[action])
             return "played " + player_hand.playable[action].type + " " + player_hand.playable[action].colour
@@ -348,6 +397,12 @@ class Game:
         # colour change sanity check
         if self.played[-1].colour != "black":
             self.colour_to_play = self.played[-1].colour
+
+        if len(self.players[player]) == 0:
+            if len(self.previous_play[player][1]) > 1:
+                self.update_q_table(self.previous_play[player][0], State([]), self.win_reward, self.previous_play[player][1][0], self.previous_play[player][1][1], True)
+            else:
+                self.update_q_table(self.previous_play[player][0], State([]), self.win_reward, self.previous_play[player][1][0], terminal=True)
 
         if self.turn_order == "CW":
             if self.current_player == 4:

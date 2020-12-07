@@ -46,6 +46,7 @@ def game_loop(g):
 
 def testing():
     g = Game(True)
+    count_times_1_wins_total = 0
     for _ in range(100):
         count_times_1_wins = 0
         print("Epoch: " + str(_))
@@ -66,7 +67,9 @@ def testing():
             current_player, turn = game_loop(g)
             if current_player == 1:
                 count_times_1_wins += 1
+                count_times_1_wins_total += 1
         print(count_times_1_wins/50)
+        print(count_times_1_wins_total/(50 * (_+1)))
         print("\n")
 
 
@@ -76,6 +79,9 @@ def main():
     #     game_loop(True)
     #     print("\n")
 
+    test_q = [State([Card("red", "reverse"), Card("blue", "9")])]
+    test = State([Card("blue", "9"), Card("red", "reverse")])
+    print(test in test_q)
     testing()
 
     # print(results)
@@ -86,6 +92,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+     main()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

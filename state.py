@@ -3,9 +3,9 @@ class State:
         self.playable = playable.copy()
         self.action_values = []
         for card in self.playable:
-            self.action_values.append(1)
+            self.action_values.append(0)
 
-        self.action_values.append([1, 1, 1, 1]) # value of choosing r, g, b, y if a black card is played
+        self.action_values.append([0, 0, 0, 0]) # value of choosing r, g, b, y if a black card is played
 
     def __str__(self):
         outstr = "Playable cards: "
