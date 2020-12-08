@@ -8,7 +8,6 @@ from game import Game
 # from test import Test
 from state import State
 from card import Card
-from collections import Counter
 
 results_from_training = []
 results_from_testing = []
