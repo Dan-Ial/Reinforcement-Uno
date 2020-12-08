@@ -151,8 +151,8 @@ class Game:
         self.must_play_draw = False
         return playable_cards
 
-    def update_q_table(self, state, state_prime, reward, action, colour_index=None, terminal=False):
-        s = self.qtable.index(state)
+    def update_q_table(self, s, state_prime, reward, action, colour_index=None, terminal=False):
+        # s = self.qtable[state]
 
         if state_prime in self.qtable and not terminal:
             state_prime = self.qtable[self.qtable.index(state_prime)]
@@ -191,6 +191,7 @@ class Game:
         for hand in self.qtable:
             if player_hand == hand:
                 player_hand_visited = True
+                break
 
 
         # adding hand to qtable if not visited
@@ -216,7 +217,7 @@ class Game:
             s = self.qtable.index(self.previous_play[player][0])
             a = self.previous_play[player][1][0]
             if len(self.previous_play[player][1]) > 1:
-                c_a = self.previous_play[1][1]
+                c_a = self.previous_play[player][1][1]
         elif self.previous_play[player][1] == [-2] and  self.training: # first hand of the game
             first_turn = True
             """
@@ -322,9 +323,9 @@ class Game:
             # applying q table update
             if self.training and s is not None and not first_turn:
                 if c_a is not None:
-                    self.update_q_table(self.previous_play[player][0], player_hand, self.play_reward, a, c_a)
+                    self.update_q_table(s, player_hand, self.play_reward, a, c_a)
                 else:
-                    self.update_q_table(self.previous_play[player][0], player_hand, self.play_reward, a)
+                    self.update_q_table(s, player_hand, self.play_reward, a)
 
             self.previous_play[player] = (player_hand, [action], self.players[player].copy())
             self.play_card(player, player_hand.playable[action])
@@ -400,9 +401,9 @@ class Game:
 
         if len(self.players[player]) == 0 and self.training:
             if len(self.previous_play[player][1]) > 1:
-                self.update_q_table(self.previous_play[player][0], State([]), self.win_reward, self.previous_play[player][1][0], self.previous_play[player][1][1], True)
+                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward, self.previous_play[player][1][0], self.previous_play[player][1][1], True)
             else:
-                self.update_q_table(self.previous_play[player][0], State([]), self.win_reward, self.previous_play[player][1][0], terminal=True)
+                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward, self.previous_play[player][1][0], terminal=True)
 
         if self.turn_order == "CW":
             if self.current_player == 4:
