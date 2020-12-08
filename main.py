@@ -5,50 +5,28 @@ Authors: Shreyansh Anand, Anne Liu, Bennet Montgomery, Daniel Oh
 """
 
 from game import Game
-# from test import Test
-from state import State
-from card import Card
-
-results_from_training = []
-results_from_testing = []
 
 
 def game_loop(g):
-
-
-    # sanity check
-    # print("Initial card: ")
-    # print(g.played[0].type)
-    # print(g.played[0].colour)
-    # print("Player hands: ")
-    # for i in range(1, 5):
-    #     print(str(State(g.players[i])))
-
-    # print("Player playable cards: ")
-    # for i in range(1, 5):
-    #     print(str(State(g.get_playable_cards(i))))
-
-    # Shrey's code -> termination statement, keep going till at least one player has 0 cards
+    """
+    function to run the game once
+    :param g: game to test on
+    :return: the player that won the game, and how many rounds it took
+    """
+    # termination statement, keep going till at least one player has 0 cards
     turn = 0
     while len(g.players[g.current_player]) != 0:
-        # print(g.current_player)
-        # print(str(State(g.get_playable_cards(g.current_player))))
-        # print(g.assess_hand())
         g.assess_hand()
         turn += 1
-    # print("round: " + str(turn//4))
-    # print("winner: " + str(g.current_player))
-        # results_from_training.append((g.current_player, turn//4))
-        # results_from_testing.append((g.current_player, turn//4))
     return g.current_player, turn // 4
 
 
 def testing():
-    g = Game(True)
+    g = Game(True)  # initialize the game with training set to on as default
     print("No training:")
     count_times_1_wins_total = 0
     count_times_1_wins = 0
-    for i in range(50):
+    for i in range(50):  # untrained see how the agent does when not trained at all in 50 games
         g.training = False
         g.restart_game()
         g.init_cards()
@@ -60,11 +38,11 @@ def testing():
     print(count_times_1_wins / 50)
     print(count_times_1_wins_total / 50)
     print("\n")
-    for _ in range(1, 11):
+    for _ in range(1, 11):  # 10 epochs
         count_times_1_wins = 0
         print("Epoch: " + str(_))
         print("educating")
-        for i in range(50):
+        for i in range(50):  # train in batches of 50
             g.training = True
             g.restart_game()
             g.init_cards()
@@ -72,7 +50,7 @@ def testing():
             game_loop(g)
         print("---------------")
         print("3 other uneducated agents")
-        for i in range(50):
+        for i in range(50):  # test on 50 games and see how it improves against random agents over time
             g.training = False
             g.restart_game()
             g.init_cards()
@@ -87,21 +65,8 @@ def testing():
 
 
 def main():
-    # for _ in range(1000):
-    #     print("Game: " + str(_))
-    #     game_loop(True)
-    #     print("\n")
-
     testing()
-
-    # print(results)
-    # for stats
-    # data = Counter(results)
-    # print(data.most_common())  # Returns all unique items and their counts
-    # print("winner most often is: " + str(data.most_common(1)))  # Returns the highest occurring item
 
 
 if __name__ == '__main__':
-     main()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()

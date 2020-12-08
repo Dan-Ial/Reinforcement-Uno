@@ -30,6 +30,10 @@ class Game:
         self.win_reward = 10
 
     def restart_game(self):
+        """
+        method to restart the game at the end of each training/testing round
+        :return:  a game that is restarted everywhere except in the qtable/reward.
+        """
         self.players = {1: [], 2: [], 3: [], 4: []}
         self.previous_play = {1: (State([]), [-1], []), 2: (State([]), [-1], []), 3: (State([]), [-1], []),
                               4: (State([]), [-1], [])}
@@ -40,7 +44,6 @@ class Game:
         self.current_player = randint(1, 5)
         self.colour_to_play = ""
         self.must_play_draw = False
-
 
     def init_cards(self):
         """
@@ -71,7 +74,7 @@ class Game:
             for _ in range(7):
                 self.players[player].append(self.draw_from[0])
                 del self.draw_from[0]
-                # Shrey's code to stop the draw 4 first problem
+        #  ensure that the first card played is not a draw 4.
         while self.draw_from[0].type == "draw 4":
             shuffle(self.draw_from)
         self.played.append(self.draw_from[0])
@@ -86,15 +89,14 @@ class Game:
     def draw(self, player, number_to_draw=0):
         """
         function for when a player needs to draw
-        :param number_to_draw: if the default value is 0, then that means they need to draw infinitely
+        :param number_to_draw: if the default value is 0 then that means they need to draw till a playable card is found
         :param player:
         :return:
         """
         if number_to_draw == 0:
             while not self.able_to_play(player):
                 if len(self.draw_from) == 0:
-                    # Shrey's code, there was a bug where after all cards are drawn, there technicaly was no
-                    # cards in the played list, so added that.
+                    # if there are no cards left to be drawn from, remake the pile
                     last_played = self.played[-1]
                     del self.played[-1]
                     shuffle(self.played)
@@ -105,6 +107,7 @@ class Game:
         else:
             for _ in range(number_to_draw):
                 if len(self.draw_from) == 0:
+                    # if there are no cards left to be drawn from, remake the pile
                     last_played = self.played[-1]
                     del self.played[-1]
                     shuffle(self.played)
@@ -117,8 +120,9 @@ class Game:
     def able_to_play(self, player, myturn=True):
         """
         function to check if the player can play on the last card
-        :param player:
-        :return:
+        :param player: current player
+        :param myturn: if the current player is playing or if its for the next player
+        :return: true or false
         """
         card_to_play_on = self.played[-1]
         for card in (self.players[player]):
@@ -133,6 +137,11 @@ class Game:
         return False
 
     def get_playable_cards(self, player=None):
+        """
+        function to see what cards a player can play
+        :param player: player to check
+        :return: a list of cards a player can play
+        """
         if player is None:
             player = self.current_player
 
@@ -152,17 +161,19 @@ class Game:
         return playable_cards
 
     def update_q_table(self, s, state_prime, reward, action, colour_index=None, terminal=False):
-        # s = self.qtable[state]
-
+        #  method to update the q_table using the algorithms provided in class
         if state_prime in self.qtable and not terminal:
             state_prime = self.qtable[self.qtable.index(state_prime)]
 
         if len(state_prime.action_values) > 1:
-            self.qtable[s].action_values[action] += self.alpha * (reward + self.gamma * max(state_prime.action_values[:-1]) - self.qtable[s].action_values[action])
+            self.qtable[s].action_values[action] += self.alpha * (
+                    reward + self.gamma * max(state_prime.action_values[:-1]) - self.qtable[s].action_values[action])
 
         if colour_index is not None:
             if len(state_prime.action_values) > 1:
-                self.qtable[s].action_values[-1][colour_index] += self.alpha * (reward + self.gamma * max(state_prime.action_values[:-1]) - self.qtable[s].action_values[-1][colour_index])
+                self.qtable[s].action_values[-1][colour_index] += self.alpha * (
+                        reward + self.gamma * max(state_prime.action_values[:-1]) -
+                        self.qtable[s].action_values[-1][colour_index])
 
         if terminal:
             self.qtable[s].action_values[action] += self.alpha * (reward - self.qtable[s].action_values[action])
@@ -172,7 +183,6 @@ class Game:
         if player is None:
             player = self.current_player
 
-        colour = ""
         if self.colour_to_play == "black" and self.previous_play[1] == [-1]:
             if random() < self.epsilon:
                 colour = randint(0, 3)
@@ -192,7 +202,6 @@ class Game:
             if player_hand == hand:
                 player_hand_visited = True
                 break
-
 
         # adding hand to qtable if not visited
         if self.training:
@@ -218,7 +227,7 @@ class Game:
             a = self.previous_play[player][1][0]
             if len(self.previous_play[player][1]) > 1:
                 c_a = self.previous_play[player][1][1]
-        elif self.previous_play[player][1] == [-2] and  self.training: # first hand of the game
+        elif self.previous_play[player][1] == [-2] and self.training:  # first hand of the game
             first_turn = True
             """
             R = len(self.previous_play[player][2]) - len(self.players[player])
@@ -334,9 +343,9 @@ class Game:
     def play_card(self, player, card_selected, colour_selected=None):
         """
         function for when a player plays an actual card
-        :param player:
-        :param card_selected:
-        :param colour_selected:
+        :param player: current player that is playing
+        :param card_selected: the card they will be playing
+        :param colour_selected: the colour that will be played if it is to change because of a Wild
         :return:
         """
         self.played.append(copy.copy(card_selected))
@@ -401,9 +410,11 @@ class Game:
 
         if len(self.players[player]) == 0 and self.training:
             if len(self.previous_play[player][1]) > 1:
-                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward, self.previous_play[player][1][0], self.previous_play[player][1][1], True)
+                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward,
+                                    self.previous_play[player][1][0], self.previous_play[player][1][1], True)
             else:
-                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward, self.previous_play[player][1][0], terminal=True)
+                self.update_q_table(self.qtable.index(self.previous_play[player][0]), State([]), self.win_reward,
+                                    self.previous_play[player][1][0], terminal=True)
 
         if self.turn_order == "CW":
             if self.current_player == 4:
