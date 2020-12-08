@@ -45,8 +45,22 @@ def game_loop(g):
 
 def testing():
     g = Game(True)
+    print("No training:")
     count_times_1_wins_total = 0
-    for _ in range(100):
+    count_times_1_wins = 0
+    for i in range(50):
+        g.training = False
+        g.restart_game()
+        g.init_cards()
+        g.distribute_cards()
+        current_player, turn = game_loop(g)
+        if current_player == 1:
+            count_times_1_wins += 1
+            count_times_1_wins_total += 1
+    print(count_times_1_wins / 50)
+    print(count_times_1_wins_total / 50)
+    print("\n")
+    for _ in range(1, 11):
         count_times_1_wins = 0
         print("Epoch: " + str(_))
         print("educating")
@@ -67,8 +81,8 @@ def testing():
             if current_player == 1:
                 count_times_1_wins += 1
                 count_times_1_wins_total += 1
-        print(count_times_1_wins/50)
-        print(count_times_1_wins_total/(50 * (_+1)))
+        print("This run: " + str(count_times_1_wins/50))
+        print("Average run: " + str(count_times_1_wins_total/(50 * (_ + 1))))
         print("\n")
 
 
@@ -78,9 +92,6 @@ def main():
     #     game_loop(True)
     #     print("\n")
 
-    test_q = [State([Card("red", "reverse"), Card("blue", "9")])]
-    test = State([Card("blue", "9"), Card("red", "reverse")])
-    print(test in test_q)
     testing()
 
     # print(results)
